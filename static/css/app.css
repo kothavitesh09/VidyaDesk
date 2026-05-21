@@ -592,6 +592,22 @@ textarea.form-control {
     overflow: hidden;
 }
 
+.receipt-modal form[data-receipt-form] {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.receipt-modal .modal-body {
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.receipt-modal .modal-footer {
+    flex-shrink: 0;
+}
+
 .receipt-preview-grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));

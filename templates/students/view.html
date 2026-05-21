@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block content %}
+{% set label, color = student_status(balance_due, total_paid) %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">{{ student.student_name }}</h1>
+    <span class="status-pill text-bg-{{ color }}">{{ label }}</span>
+</div>
+<div class="row g-3">
+    <div class="col-lg-5">
+        <div class="erp-panel">
+            <h2 class="erp-title">Student Details</h2>
+            <table class="table table-bordered mb-0">
+                <tr><th>Admission No</th><td>{{ student.admission_no }}</td></tr>
+                <tr><th>Grade</th><td>{{ student.grade }}</td></tr>
+                <tr><th>Student Type</th><td>{{ student.student_type }}</td></tr>
+                <tr><th>Mobile</th><td>{{ student.mobile }}</td></tr>
+                <tr><th>Parent</th><td>{{ student.father_name }} / {{ student.mother_name }}</td></tr>
+            </table>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="erp-panel">
+            <h2 class="erp-title">Financial Summary</h2>
+            <table class="table table-bordered mb-0">
+                <tr><th>Total Fee</th><td>{{ fmt_money(effective_fee.total_fee) }}</td><th>Discount</th><td>{{ fmt_money(effective_fee.discount) }}</td></tr>
+                <tr><th>Net Receivable</th><td>{{ fmt_money(effective_fee.net_receivable) }}</td><th>Total Paid</th><td>{{ fmt_money(total_paid) }}</td></tr>
+                <tr><th>Balance Due</th><td colspan="3">{{ fmt_money(balance_due) }}</td></tr>
+            </table>
+        </div>
+    </div>
+</div>
+<div class="erp-panel">
+    <h2 class="erp-title">Payment History</h2>
+    <table class="table table-bordered">
+        <thead class="table-light"><tr><th>Receipt No</th><th>Date</th><th>Amount</th><th>Mode</th></tr></thead>
+        <tbody>{% for p in payments %}<tr><td>{{ p.receipt_no }}</td><td>{{ p.receipt_date }}</td><td>{{ fmt_money(p.amount_paid) }}</td><td>{{ p.payment_mode }}</td></tr>{% else %}<tr><td colspan="4" class="text-muted text-center">No receipts</td></tr>{% endfor %}</tbody>
+    </table>
+    <a class="btn btn-outline-primary" href="{{ url_for('students.edit', student_id=student._id) }}"><i class="bi bi-pencil"></i> Edit</a>
+</div>
+{% endblock %}

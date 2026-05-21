@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% set export_name = "date_wise_collections" %}
+{% block content %}
+{% include "reports/_actions.html" %}
+<div class="report-page">
+    <h1 class="report-heading">Date-wise Collections</h1>
+    <div class="section-caption"><span>Collections by Receipt Date</span><span>Year : {{ year }}</span></div>
+    <table class="report-table">
+        <thead><tr><th>Date</th><th>Receipt Count</th><th>Collections</th></tr></thead>
+        <tbody>{% for r in rows %}<tr class="dash"><td>{{ r.receipt_date }}</td><td>{{ r.receipt_count }}</td><td>{{ fmt_money(r.collections) }}</td></tr>{% else %}<tr><td colspan="3" class="text-center">No collections found</td></tr>{% endfor %}</tbody>
+    </table>
+</div>
+{% endblock %}

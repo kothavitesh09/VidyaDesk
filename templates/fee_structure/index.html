@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block content %}
+{% set current_heads = edit_row.fee_heads if edit_row and edit_row.fee_heads else [] %}
+{% if edit_row and not current_heads %}
+    {% set current_heads = [] %}
+{% endif %}
+<section class="fee-structure-module">
+    <div class="fee-page-head">
+        <div>
+            <span class="students-eyebrow">Reusable plans</span>
+            <h1>Fee Structure</h1>
+            <p>Create standard academic plans and fully custom fee structures.</p>
+        </div>
+        <form method="get" class="fee-year-filter">
+            <label class="form-label">Academic Year</label>
+            <select class="form-select" name="academic_year" onchange="this.form.submit()">
+                {% for year in academic_years() %}
+                <option value="{{ year.name }}" {% if active_year == year.name %}selected{% endif %}>{{ year.name }}</option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+
+    <form method="post" action="{{ url_for('fees.save') }}" class="fee-editor-grid" data-fee-builder data-duplicate-message="Fee head names must be unique.">
+        <input type="hidden" name="id" value="{{ edit_row._id if edit_row }}">
+        <div class="fee-editor-main">
+            <div class="fee-card">
+                <div class="fee-card-head">
+                    <div><span>Basic Details</span><strong>{{ "Edit Structure" if edit_row else "New Structure" }}</strong></div>
+                    {% if edit_row %}<a class="btn btn-outline-secondary btn-sm" href="{{ url_for('fees.index') }}">Cancel Edit</a>{% endif %}
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-3"><label class="form-label">Academic Year</label><select class="form-select" name="academic_year" required>{% set form_year = edit_row.academic_year if edit_row else active_year %}{% for year in academic_years() %}<option value="{{ year.name }}" {% if form_year == year.name %}selected{% endif %}>{{ year.name }}</option>{% endfor %}</select></div>
+                    <div class="col-md-3"><label class="form-label">Class/Grade</label><select class="form-select" name="grade" required><option value="">Select</option>{% for g in grades %}<option value="{{ g }}" {% if edit_row and (edit_row.grade == g or edit_row.class_name == g) %}selected{% endif %}>{{ g }}</option>{% endfor %}</select></div>
+                    <div class="col-md-6"><label class="form-label">Fee Structure Name</label><input class="form-control" name="fee_structure_name" value="{{ edit_row.fee_structure_name if edit_row else '' }}" placeholder="Grade 8 Standard" required></div>
+                    <div class="col-md-4"><label class="form-label">Fee Structure Type</label><select class="form-select" name="fee_structure_type"><option value="standard" {% if not edit_row or edit_row.fee_structure_type != "manual" %}selected{% endif %}>Standard Academic Fee Structure</option><option value="manual" {% if edit_row and edit_row.fee_structure_type == "manual" %}selected{% endif %}>Manual / Custom Fee Structure</option></select></div>
+                    <div class="col-md-4"><label class="form-label">Student Type</label><select class="form-select" name="student_type"><option value="">All / Custom</option><option {% if edit_row and edit_row.student_type == "Day Scholar" %}selected{% endif %}>Day Scholar</option><option {% if edit_row and edit_row.student_type == "Residential" %}selected{% endif %}>Residential</option></select></div>
+                    <div class="col-md-4"><label class="form-label">Description</label><input class="form-control" name="description" value="{{ edit_row.description if edit_row else '' }}" placeholder="Optional"></div>
+                </div>
+            </div>
+
+            <div class="fee-card">
+                <div class="fee-card-head">
+                    <div><span>Dynamic Fee Heads</span><strong>Fee Items</strong></div>
+                    <button class="btn btn-outline-primary btn-sm" type="button" data-add-fee-head><i class="bi bi-plus-lg"></i> Add Fee Head</button>
+                </div>
+                <div class="fee-head-builder" data-fee-head-list>
+                    {% if current_heads %}
+                        {% for head in current_heads %}
+                        <div class="fee-head-row" data-fee-head-row draggable="true">
+                            <button class="fee-drag" type="button" title="Drag to reorder"><i class="bi bi-grip-vertical"></i></button>
+                            <input class="form-control" name="fee_head_name" value="{{ head.name }}" placeholder="Fee Head Name" required>
+                            <input class="form-control" name="fee_head_amount" value="{{ head.amount }}" inputmode="decimal" placeholder="Amount" data-fee-amount required>
+                            <button class="icon-btn danger" type="button" title="Delete" data-remove-fee-head><i class="bi bi-trash"></i></button>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        {% for key, label in fee_heads %}
+                        <div class="fee-head-row" data-fee-head-row draggable="true">
+                            <button class="fee-drag" type="button" title="Drag to reorder"><i class="bi bi-grip-vertical"></i></button>
+                            <input class="form-control" name="fee_head_name" value="{{ label }}" placeholder="Fee Head Name" required>
+                            <input class="form-control" name="fee_head_amount" value="{{ edit_row.get(key, 0) if edit_row else 0 }}" inputmode="decimal" placeholder="Amount" data-fee-amount required>
+                            <button class="icon-btn danger" type="button" title="Delete" data-remove-fee-head><i class="bi bi-trash"></i></button>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                <div class="fee-builder-error" data-fee-error></div>
+            </div>
+        </div>
+
+        <aside class="fee-summary-panel">
+            <div class="fee-total-box">
+                <span>Total Fee Amount</span>
+                <strong data-builder-total>{{ fmt_money(edit_row.total_fee if edit_row else 0) }}</strong>
+            </div>
+            <div class="fee-summary-line"><span>Number of Fee Heads</span><strong data-builder-count>0</strong></div>
+            <button class="btn btn-primary w-100" type="submit"><i class="bi bi-save"></i> Save Structure</button>
+        </aside>
+    </form>
+
+    <div class="fee-card">
+        <div class="fee-card-head"><div><span>Saved Plans</span><strong>{{ rows|length }} structure{{ "" if rows|length == 1 else "s" }}</strong></div></div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead><tr><th>Name</th><th>Year</th><th>Grade</th><th>Type</th><th>Heads</th><th>Total Fee</th><th class="text-end">Actions</th></tr></thead>
+                <tbody>
+                {% for row in rows %}
+                <tr>
+                    <td class="fw-semibold">{{ row.fee_structure_name or row.grade }}</td>
+                    <td>{{ row.academic_year }}</td>
+                    <td>{{ row.grade or row.class_name }}</td>
+                    <td>{{ "Manual / Custom" if row.fee_structure_type == "manual" else "Standard" }}</td>
+                    <td>{{ row.fee_heads|length if row.fee_heads else fee_heads|length }}</td>
+                    <td>{{ fmt_money(row.total_amount or row.total_fee) }}</td>
+                    <td class="text-end text-nowrap"><a class="btn btn-sm btn-outline-primary" href="{{ url_for('fees.edit', item_id=row._id, academic_year=active_year) }}"><i class="bi bi-pencil"></i></a> <form class="d-inline" method="post" action="{{ url_for('fees.delete', item_id=row._id) }}" onsubmit="return confirm('Delete this structure?')"><button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button></form></td>
+                </tr>
+                {% else %}
+                <tr><td colspan="7" class="text-center text-muted py-4">No fee structures saved</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endblock %}

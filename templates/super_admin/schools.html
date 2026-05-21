@@ -1,0 +1,28 @@
+{% extends "super_admin/_layout.html" %}
+{% block content %}
+<h1 class="h4 mb-3">Schools Management</h1>
+<div class="erp-panel">
+    <table class="table table-hover align-middle">
+        <thead><tr><th>School</th><th>Status</th><th>Expiry</th><th>Contact</th><th class="text-end">Actions</th></tr></thead>
+        <tbody>
+        {% for school in schools %}
+        <tr>
+            <td><strong>{{ school.school_name }}</strong><br><small>{{ school.school_id }} · {{ school.email }}</small></td>
+            <td>{{ school.approval_status }} / {{ school.account_status }}</td>
+            <td>{{ school.expiry_date }}</td>
+            <td>{{ school.contact_person }}<br><small>{{ school.phone }}</small></td>
+            <td class="text-end">
+                <form class="d-inline" method="post" action="{{ url_for('super_admin.update_school_status', school_id=school.school_id) }}"><input type="hidden" name="account_status" value="active"><button class="btn btn-sm btn-outline-success">Activate</button></form>
+                <form class="d-inline" method="post" action="{{ url_for('super_admin.update_school_status', school_id=school.school_id) }}"><input type="hidden" name="account_status" value="inactive"><button class="btn btn-sm btn-outline-secondary">Deactivate</button></form>
+                <form class="d-inline" method="post" action="{{ url_for('super_admin.update_school_status', school_id=school.school_id) }}"><input type="hidden" name="account_status" value="suspended"><button class="btn btn-sm btn-outline-warning">Suspend</button></form>
+                <form class="d-inline-flex gap-1 mt-1" method="post" action="{{ url_for('super_admin.reset_school_password', school_id=school.school_id) }}"><input class="form-control form-control-sm" name="password" placeholder="New password"><button class="btn btn-sm btn-outline-primary">Reset</button></form>
+                <form class="d-inline" method="post" action="{{ url_for('super_admin.delete_school', school_id=school.school_id) }}" onsubmit="return confirm('Delete this school account? ERP data will be preserved.')"><button class="btn btn-sm btn-outline-danger">Delete</button></form>
+            </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-center text-muted">No schools found</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

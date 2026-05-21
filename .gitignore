@@ -1,0 +1,10 @@
+.env
+__pycache__/
+*.py[cod]
+server.err.log
+server.out.log
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+instance/
+static/uploads/

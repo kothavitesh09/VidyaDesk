@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}VidyaDesk SaaS Admin{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/app.css', v='20260521') }}" rel="stylesheet">
+</head>
+<body class="saas-admin-body">
+<aside class="saas-admin-sidebar">
+    <div class="brand mb-3"><span class="brand-mark"><i class="bi bi-shield-lock-fill"></i></span><span><strong>VidyaDesk</strong><small>SaaS Admin</small></span></div>
+    <a href="{{ url_for('super_admin.dashboard') }}">Dashboard</a>
+    <a href="{{ url_for('super_admin.school_requests') }}">School Requests</a>
+    <a href="{{ url_for('super_admin.schools') }}">Schools</a>
+    <a href="{{ url_for('super_admin.billing') }}">Billing</a>
+    <a href="{{ url_for('super_admin.audit_logs') }}">Audit Logs</a>
+    <a href="{{ url_for('super_admin.settings') }}">Settings</a>
+    <a href="{{ url_for('super_admin.logout') }}">Logout</a>
+</aside>
+<main class="saas-admin-main">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+</main>
+</body>
+</html>

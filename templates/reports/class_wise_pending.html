@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% set export_name = "class_wise_pending" %}
+{% block content %}
+{% include "reports/_actions.html" %}
+<div class="report-page">
+    <h1 class="report-heading">Class-wise Pending Dues</h1>
+    <div class="section-caption"><span>Pending Dues by Class</span><span>Year : {{ year }}</span></div>
+    <table class="report-table">
+        <thead><tr><th>Grade</th><th>Student Count</th><th>Pending Due</th></tr></thead>
+        <tbody>{% for r in rows %}<tr class="dash"><td>{{ r.grade }}</td><td>{{ r.student_count }}</td><td>{{ fmt_money(r.pending_due) }}</td></tr>{% else %}<tr><td colspan="3" class="text-center">No pending dues found</td></tr>{% endfor %}</tbody>
+    </table>
+</div>
+{% endblock %}

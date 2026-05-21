@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% set export_name = "payment_mode_summary" %}
+{% block content %}
+{% include "reports/_actions.html" %}
+<div class="report-page">
+    <h1 class="report-heading">Payment Mode Summary</h1>
+    <div class="section-caption"><span>Collections by Payment Mode</span><span>Year : {{ year }}</span></div>
+    <table class="report-table">
+        <thead><tr><th>Payment Mode</th><th>Receipt Count</th><th>Collections</th></tr></thead>
+        <tbody>{% for r in rows %}<tr class="dash"><td><i class="bi bi-credit-card me-1"></i>{{ r.payment_mode }}</td><td>{{ r.receipt_count }}</td><td>{{ fmt_money(r.collections) }}</td></tr>{% else %}<tr><td colspan="3" class="text-center">No collections found</td></tr>{% endfor %}</tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="reports-dashboard">
+    <div class="reports-hero">
+        <div>
+            <span class="reports-eyebrow">ERP intelligence</span>
+            <h1>Reports</h1>
+            <p>Review admissions, collections, receivables and student payment activity for the selected academic year.</p>
+        </div>
+        <span class="reports-year-pill"><i class="bi bi-calendar3"></i>{{ current_academic_year() }}</span>
+    </div>
+
+    <div class="reports-stat-grid">
+        {% set stats = [
+            ('Total Students', 'Admissions overview', 'reports.admissions', 'bi-people-fill', 'blue'),
+            ('Total Collections', 'Collection reports', 'reports.collections', 'bi-cash-coin', 'green'),
+            ('Pending Dues', 'Class-wise dues', 'reports.class_wise_pending', 'bi-exclamation-circle-fill', 'orange'),
+            ('Today Collections', 'Date-wise records', 'reports.date_wise_collections', 'bi-calendar-check', 'purple')
+        ] %}
+        {% for label, caption, endpoint, icon, color in stats %}
+        <a class="reports-stat-card text-decoration-none" href="{{ url_for(endpoint) }}">
+            <span class="reports-stat-icon reports-icon-{{ color }}"><i class="bi {{ icon }}"></i></span>
+            <span>
+                <strong>{{ label }}</strong>
+                <small>{{ caption }}</small>
+            </span>
+            <i class="bi bi-arrow-up-right reports-stat-arrow"></i>
+        </a>
+        {% endfor %}
+    </div>
+
+    {% set sections = [
+        ('Analytics Reports', [
+            ('Summary Report','reports.summary','bi-clipboard-data','Overall admissions, dues and collections','blue'),
+            ('Admissions Report','reports.admissions','bi-people','Student strength and admission category summary','green'),
+            ('Payment Mode Summary','reports.payment_mode_summary','bi-credit-card','Collections grouped by payment method','purple')
+        ]),
+        ('Financial Reports', [
+            ('Fees Receivable Report','reports.receivable','bi-table','Fee receivables by class and student type','blue'),
+            ('Fees Collection Report','reports.collections','bi-cash-coin','Collection performance against receivables','green'),
+            ('Discounts Report','reports.discounts','bi-percent','Discount totals and affected student counts','orange'),
+            ('Fee Structure Report','reports.fee_structure','bi-list-columns','Configured fee heads across classes','purple'),
+            ('Date-wise Collections','reports.date_wise_collections','bi-calendar2-week','Daily receipt counts and collection totals','blue')
+        ]),
+        ('Student Reports', [
+            ('Student Wise Report','reports.student_wise','bi-person-lines-fill','Detailed student payment records','purple'),
+            ('Class-wise Pending Dues','reports.class_wise_pending','bi-hourglass-split','Class-wise pending fee analysis','orange'),
+            ('Receipt History','reports.receipt_history','bi-receipt-cutoff','Receipt-level payment history and balances','green')
+        ])
+    ] %}
+
+    {% for section, items in sections %}
+    <section class="reports-section">
+        <div class="reports-section-heading">
+            <h2>{{ section }}</h2>
+            <span>{{ items|length }} reports</span>
+        </div>
+        <div class="reports-card-grid">
+            {% for title, endpoint, icon, subtitle, color in items %}
+            <a class="reports-card text-decoration-none" href="{{ url_for(endpoint) }}">
+                <span class="reports-card-icon reports-icon-{{ color }}"><i class="bi {{ icon }}"></i></span>
+                <span class="reports-card-copy">
+                    <strong>{{ title }}</strong>
+                    <small>{{ subtitle }}</small>
+                </span>
+                <span class="reports-card-action"><i class="bi bi-arrow-right"></i></span>
+            </a>
+            {% endfor %}
+        </div>
+    </section>
+    {% endfor %}
+</div>
+{% endblock %}

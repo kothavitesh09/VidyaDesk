@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Create School Account - VidyaDesk{% endblock %}
+{% block content %}
+<div class="auth-shell row justify-content-center align-items-center">
+    <div class="col-lg-7">
+        <div class="erp-panel auth-card">
+            <div class="brand auth-brand mb-4">
+                <span class="brand-mark"><i class="bi bi-building-add"></i></span>
+                <span><strong>Create School Account</strong><small>Approval required before login</small></span>
+            </div>
+            <form method="post" class="row g-3">
+                <div class="col-md-6"><label class="form-label">School Name</label><input class="form-control" name="school_name" required autofocus></div>
+                <div class="col-md-6"><label class="form-label">Principal / Contact Person</label><input class="form-control" name="contact_person" required></div>
+                <div class="col-md-6"><label class="form-label">Phone Number</label><input class="form-control" name="phone" required></div>
+                <div class="col-md-6"><label class="form-label">Email</label><input class="form-control" type="email" name="email" required></div>
+                <div class="col-12"><label class="form-label">Address</label><textarea class="form-control" name="address" required></textarea></div>
+                <div class="col-md-6"><label class="form-label">Username</label><input class="form-control" name="username" required></div>
+                <div class="col-md-6"><label class="form-label">Password</label><input class="form-control" type="password" name="password" minlength="6" required></div>
+                <div class="col-12 d-flex gap-2"><button class="btn btn-primary">Submit for Approval</button><a class="btn btn-outline-secondary" href="{{ url_for('auth.login') }}">Back to Login</a></div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+{% block content %}
+{% set status_options = ["Active", "Promoted", "Left", "Alumni"] %}
+{% set type_options = ["Day Scholar", "Residential"] %}
+<section class="students-module">
+    <div class="students-hero">
+        <div>
+            <span class="students-eyebrow">Student lifecycle</span>
+            <h1>Students</h1>
+            <p>Manage admissions, promotions, and student records</p>
+        </div>
+        <div class="students-hero-actions">
+            <button class="btn btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#bulkPromoteModal">
+                <i class="bi bi-arrow-up-right-circle"></i> Bulk Promote
+            </button>
+            <a class="btn btn-primary" href="{{ url_for('students.add') }}"><i class="bi bi-plus-lg"></i> Add Student</a>
+        </div>
+    </div>
+
+    <div class="student-stat-grid">
+        <div class="student-stat-card stat-blue"><span><i class="bi bi-people-fill"></i></span><small>Total Students</small><strong>{{ stats.total_students }}</strong></div>
+        <div class="student-stat-card stat-green"><span><i class="bi bi-person-check-fill"></i></span><small>Active Students</small><strong>{{ stats.active_students }}</strong></div>
+        <div class="student-stat-card stat-indigo"><span><i class="bi bi-mortarboard-fill"></i></span><small>Promoted Students</small><strong>{{ stats.promoted_students }}</strong></div>
+        <div class="student-stat-card stat-rose"><span><i class="bi bi-person-dash-fill"></i></span><small>Left Students</small><strong>{{ stats.left_students }}</strong></div>
+        <div class="student-stat-card stat-amber"><span><i class="bi bi-wallet2"></i></span><small>Total Due Amount</small><strong>{{ fmt_money(stats.total_due) }}</strong></div>
+    </div>
+
+    <form class="student-filter-toolbar" method="get">
+        <div class="student-search-field">
+            <i class="bi bi-search"></i>
+            <input class="form-control" name="q" value="{{ q }}" placeholder="Search admission no, name, mobile">
+        </div>
+        <select class="form-select" name="grade" aria-label="Class">
+            <option value="">All Classes</option>
+            {% for g in grades %}<option value="{{ g }}" {% if g==grade %}selected{% endif %}>{{ g }}</option>{% endfor %}
+        </select>
+        <select class="form-select" name="academic_year" aria-label="Academic year">
+            {% for year in academic_years() %}
+                <option value="{{ year.name }}" {% if year.name == selected_year %}selected{% endif %}>{{ year.name }}</option>
+            {% endfor %}
+        </select>
+        <select class="form-select" name="status" aria-label="Student status">
+            <option value="">All Status</option>
+            {% for option in status_options %}<option value="{{ option }}" {% if option==status %}selected{% endif %}>{{ option }}</option>{% endfor %}
+        </select>
+        <select class="form-select" name="student_type" aria-label="Student type">
+            <option value="">All Types</option>
+            {% for option in type_options %}<option value="{{ option }}" {% if option==student_type %}selected{% endif %}>{{ option }}</option>{% endfor %}
+        </select>
+        <select class="form-select" name="due_status" aria-label="Due status">
+            <option value="">All Dues</option>
+            <option value="no_due" {% if due_status=="no_due" %}selected{% endif %}>No Due</option>
+            <option value="medium_due" {% if due_status=="medium_due" %}selected{% endif %}>Medium Due</option>
+            <option value="high_due" {% if due_status=="high_due" %}selected{% endif %}>High Due</option>
+        </select>
+        <div class="student-filter-actions">
+            <button class="btn btn-outline-primary" type="submit" title="Apply filters"><i class="bi bi-funnel"></i></button>
+            <a class="btn btn-outline-secondary" href="{{ url_for('students.index') }}" title="Clear filters"><i class="bi bi-x-lg"></i></a>
+        </div>
+    </form>
+
+    <div class="students-table-panel">
+        <div class="students-table-meta">
+            <div>
+                <strong>Student Records</strong>
+                <span>{{ total }} record{{ "" if total == 1 else "s" }} found</span>
+            </div>
+            <span>Page {{ page }} of {{ ((total - 1) // per_page) + 1 if total else 1 }}</span>
+        </div>
+        <div class="table-responsive students-table-wrap">
+            <table class="table students-table align-middle">
+                <thead>
+                    <tr>
+                        <th>Admission No</th>
+                        <th>Student Name</th>
+                        <th>Grade</th>
+                        <th>Student Type</th>
+                        <th>Mobile</th>
+                        <th>Balance Due</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for student in students %}
+                {% set due = student.display_balance_due if student.display_balance_due is defined else student.balance_due %}
+                {% set row_status = student.status or "Active" %}
+                <tr>
+                    <td><span class="student-admission">{{ student.admission_no }}</span></td>
+                    <td>
+                        <button class="student-name-btn" type="button" data-student-drawer="{{ student._id }}">
+                            <span>{{ student.student_name }}</span>
+                            <small>{{ student.father_name or "Parent details pending" }}</small>
+                        </button>
+                    </td>
+                    <td>{{ student.grade }}</td>
+                    <td>{{ student.student_type }}</td>
+                    <td>{{ student.mobile }}</td>
+                    <td>
+                        <span class="due-badge {% if due <= 0 %}due-ok{% elif due <= 10000 %}due-medium{% else %}due-high{% endif %}">
+                            {{ "No Due" if due <= 0 else fmt_money(due) }}
+                        </span>
+                    </td>
+                    <td><span class="student-status-pill status-{{ row_status|lower }}">{{ row_status }}</span></td>
+                    <td class="text-end">
+                        <div class="student-actions">
+                            <button class="icon-btn" type="button" title="View Profile" data-student-drawer="{{ student._id }}"><i class="bi bi-eye"></i></button>
+                            <a class="icon-btn" title="Edit Student" href="{{ url_for('students.edit', student_id=student._id) }}"><i class="bi bi-pencil"></i></a>
+                            <button class="icon-btn" type="button" title="Promote Student" data-promote-student="{{ student._id }}" data-name="{{ student.student_name }}" data-year="{{ student.academic_year }}" data-grade="{{ student.grade }}"><i class="bi bi-arrow-up-right"></i></button>
+                            <button class="icon-btn" type="button" title="Mark as Left" data-left-student="{{ student._id }}" data-name="{{ student.student_name }}"><i class="bi bi-person-dash"></i></button>
+                            <a class="icon-btn" title="View Receipts" href="{{ url_for('receipts.index', student_id=student._id) }}"><i class="bi bi-receipt"></i></a>
+                            <a class="icon-btn" title="View Ledger" href="{{ url_for('reports.student_wise', student_id=student._id) }}"><i class="bi bi-journal-text"></i></a>
+                            <form method="post" action="{{ url_for('students.delete', student_id=student._id) }}" onsubmit="return confirm('Delete this student and linked payments?')">
+                                <button class="icon-btn danger" title="Delete" type="submit"><i class="bi bi-trash"></i></button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="8" class="text-center py-5"><span class="empty-state"><i class="bi bi-search"></i><strong>No students found</strong><small>Try changing filters or add a new student.</small></span></td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<div class="offcanvas offcanvas-end student-profile-drawer" tabindex="-1" id="studentProfileDrawer" aria-labelledby="studentProfileTitle">
+    <div class="offcanvas-header">
+        <div>
+            <span class="students-eyebrow">Profile</span>
+            <h2 id="studentProfileTitle">Student Profile</h2>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <div class="drawer-loading" data-profile-loading>Loading profile...</div>
+        <div class="d-none" data-profile-content>
+            <div class="profile-summary">
+                <div class="profile-avatar" data-profile-initials>ST</div>
+                <div>
+                    <h3 data-profile-name></h3>
+                    <p data-profile-meta></p>
+                    <span data-profile-status></span>
+                </div>
+            </div>
+            <ul class="nav nav-pills profile-tabs" role="tablist">
+                <li class="nav-item"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#profileOverview" type="button">Overview</button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#profileFees" type="button">Fees</button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#profileReceipts" type="button">Receipts</button></li>
+                <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#profileHistory" type="button">Academic History</button></li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="profileOverview">
+                    <div class="profile-grid" data-profile-overview></div>
+                </div>
+                <div class="tab-pane fade" id="profileFees">
+                    <div class="fee-summary-grid" data-profile-fees></div>
+                    <div class="fee-head-grid mt-3" data-profile-fee-heads></div>
+                </div>
+                <div class="tab-pane fade" id="profileReceipts"><div class="profile-list" data-profile-receipts></div></div>
+                <div class="tab-pane fade" id="profileHistory"><div class="profile-list" data-profile-history></div></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="promoteStudentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content lifecycle-modal" method="post" data-promote-form>
+            <div class="modal-header">
+                <div><span class="students-eyebrow">Promotion</span><h2>Promote Student</h2></div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body row g-3">
+                <div class="col-12"><strong data-promote-name></strong></div>
+                <div class="col-md-6"><label class="form-label">Current Academic Year</label><input class="form-control" name="current_academic_year" data-promote-year readonly></div>
+                <div class="col-md-6"><label class="form-label">Next Academic Year</label><input class="form-control" name="next_academic_year" placeholder="2026-27" required></div>
+                <div class="col-md-6"><label class="form-label">Current Grade</label><input class="form-control" name="current_grade" data-promote-grade readonly></div>
+                <div class="col-md-6"><label class="form-label">Promote To Grade</label><select class="form-select" name="promote_to_grade" required><option value="">Select</option>{% for g in grades %}<option>{{ g }}</option>{% endfor %}</select></div>
+                <div class="col-12">
+                    <label class="form-check fee-keep-check">
+                        <input class="form-check-input" type="checkbox" name="keep_existing_fee_structure" data-keep-existing-fee checked>
+                        <span>Keep Existing Fee Structure</span>
+                    </label>
+                </div>
+                <div class="col-md-6" data-promotion-new-fee>
+                    <label class="form-label">Fee Structure Year</label>
+                    <input class="form-control" name="assigned_fee_structure_year" placeholder="2026-27">
+                </div>
+                <div class="col-md-6" data-promotion-new-fee>
+                    <label class="form-label">New Fee Structure</label>
+                    <select class="form-select" name="assigned_fee_structure_id">
+                        <option value="">Auto match by new class/type</option>
+                        {% for structure in fee_structures %}
+                        <option value="{{ structure.id }}">{{ structure.academic_year }} - {{ structure.grade }} - {{ structure.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12"><label class="form-label">Remarks</label><textarea class="form-control" name="remarks" placeholder="Optional remarks"></textarea></div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary"><i class="bi bi-check2-circle"></i> Confirm Promotion</button></div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="markLeftModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content lifecycle-modal" method="post" data-left-form>
+            <div class="modal-header">
+                <div><span class="students-eyebrow">Lifecycle</span><h2>Mark as Left</h2></div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body row g-3">
+                <div class="col-12"><strong data-left-name></strong></div>
+                <div class="col-md-6"><label class="form-label">Leaving Date</label><input class="form-control" type="date" name="left_date" required></div>
+                <div class="col-md-6"><label class="form-label">TC Issued</label><select class="form-select" name="tc_issued"><option>No</option><option>Yes</option></select></div>
+                <div class="col-12"><label class="form-label">Reason</label><input class="form-control" name="left_reason" placeholder="Transfer, relocation, completed schooling"></div>
+                <div class="col-12"><label class="form-label">Remarks</label><textarea class="form-control" name="remarks" placeholder="Optional remarks"></textarea></div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary"><i class="bi bi-check2-circle"></i> Save Status</button></div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="bulkPromoteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <form class="modal-content lifecycle-modal" method="post" action="{{ url_for('students.bulk_promote') }}" data-bulk-promote-form>
+            <div class="modal-header">
+                <div><span class="students-eyebrow">Batch workflow</span><h2>Bulk Promote</h2></div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3">
+                    <div class="col-md-6"><label class="form-label">Current Academic Year</label><input class="form-control" name="current_academic_year" value="{{ selected_year }}" data-bulk-year required></div>
+                    <div class="col-md-6"><label class="form-label">Next Academic Year</label><input class="form-control" name="next_academic_year" placeholder="2026-27" required></div>
+                    <div class="col-md-6"><label class="form-label">Current Class</label><select class="form-select" name="current_grade" data-bulk-current-grade required><option value="">Select</option>{% for g in grades %}<option>{{ g }}</option>{% endfor %}</select></div>
+                    <div class="col-md-6"><label class="form-label">Next Class</label><select class="form-select" name="next_grade" required><option value="">Select</option>{% for g in grades %}<option>{{ g }}</option>{% endfor %}</select></div>
+                </div>
+                <div class="bulk-student-picker mt-3">
+                    <div class="bulk-picker-head"><strong>Eligible Students</strong><button class="btn btn-sm btn-outline-primary" type="button" data-bulk-load><i class="bi bi-arrow-clockwise"></i> Load</button></div>
+                    <div class="bulk-picker-list" data-bulk-students><span class="text-muted">Select a current class and load students.</span></div>
+                </div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary" data-bulk-submit><i class="bi bi-lightning-charge"></i> Execute Promotion</button></div>
+        </form>
+    </div>
+</div>
+{% endblock %}

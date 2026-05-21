@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% set export_name = "receivable" %}
+{% block content %}
+{% include "reports/_actions.html" %}
+<div class="report-page">
+    <h1 class="report-heading">Fees Receivable Report</h1>
+    <div class="section-caption"><span>Grade-wise Receivables</span><span>Year : {{ year }}</span></div>
+    <table class="report-table">
+        <thead><tr><th>Grade</th><th>Student Type</th><th>Actual Receivable</th><th>Discounts</th><th>Net Receivable</th></tr></thead>
+        <tbody>{% for r in rows %}<tr class="dash"><td>{{ r.grade }}</td><td>{{ r.student_type }}</td><td>{{ fmt_money(r.actual_receivable) }}</td><td>{{ fmt_money(r.discounts) }}</td><td>{{ fmt_money(r.net_receivable) }}</td></tr>{% else %}<tr><td colspan="5" class="text-center">No data</td></tr>{% endfor %}</tbody>
+    </table>
+</div>
+{% endblock %}

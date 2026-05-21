@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <h1 class="h4 mb-1">Dashboard</h1>
+        <div class="text-muted">Financial overview for admissions, collections and dues.</div>
+    </div>
+    <span class="badge rounded-pill text-bg-light border px-3 py-2">Year: {{ active_year }}</span>
+</div>
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl"><div class="summary-card"><div class="metric-icon metric-blue"><i class="bi bi-people-fill"></i></div><div class="label">Total Students</div><div class="value">{{ stats.total_students }}</div></div></div>
+    <div class="col-sm-6 col-xl"><div class="summary-card"><div class="metric-icon metric-indigo"><i class="bi bi-wallet2"></i></div><div class="label">Total Fees</div><div class="value">{{ fmt_money(stats.net_receivable) }}</div></div></div>
+    <div class="col-sm-6 col-xl"><div class="summary-card"><div class="metric-icon metric-green"><i class="bi bi-cash-coin"></i></div><div class="label">Total Collections</div><div class="value">{{ fmt_money(stats.collections) }}</div></div></div>
+    <div class="col-sm-6 col-xl"><div class="summary-card"><div class="metric-icon metric-orange"><i class="bi bi-exclamation-circle-fill"></i></div><div class="label">Pending Dues</div><div class="value">{{ fmt_money(stats.balance_due) }}</div></div></div>
+    <div class="col-sm-6 col-xl"><div class="summary-card"><div class="metric-icon metric-blue"><i class="bi bi-calendar-check"></i></div><div class="label">Today Collections</div><div class="value">{{ fmt_money(stats.today_collections) }}</div></div></div>
+</div>
+
+<div class="row g-3">
+    <div class="col-xl-7">
+        <div class="erp-panel h-100">
+            <h2 class="erp-title">Admissions Summary</h2>
+            {% for name, block in admission_blocks.items() %}
+            {% set rows, totals = block %}
+            <div class="section-caption"><span>{{ name }}</span><span>Year : {{ active_year }}</span></div>
+            <div class="table-responsive">
+                <table class="report-table mb-3">
+                    <thead>
+                    <tr><th rowspan="2">Particulars</th><th colspan="3">Old Students</th><th colspan="3">New Students</th><th colspan="3">Total Students</th></tr>
+                    <tr><th>Boys Old</th><th>Girls Old</th><th>Total</th><th>Boys New</th><th>Girls New</th><th>Total</th><th>Total Boys</th><th>Total Girls</th><th>Total</th></tr>
+                    </thead>
+                    <tbody>
+                    <tr class="total-row"><td>{{ name }}</td><td>{{ totals.old_boys }}</td><td>{{ totals.old_girls }}</td><td>{{ totals.old_total }}</td><td>{{ totals.new_boys }}</td><td>{{ totals.new_girls }}</td><td>{{ totals.new_total }}</td><td>{{ totals.total_boys }}</td><td>{{ totals.total_girls }}</td><td>{{ totals.total }}</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="col-xl-5">
+        <div class="erp-panel h-100">
+            <h2 class="erp-title">Collection Trend</h2>
+            {% set trend_items = [
+                ('Receivable', stats.net_receivable, 'trend-blue'),
+                ('Collections', stats.collections, 'trend-green'),
+                ('Balance', stats.balance_due, 'trend-orange')
+            ] %}
+            {% set max_trend_value = [stats.net_receivable, stats.collections, stats.balance_due]|max %}
+            <div class="dashboard-chart" aria-label="Collection trend">
+                {% for label, value, color_class in trend_items %}
+                {% set bar_height = ((value / max_trend_value) * 100) if max_trend_value else 0 %}
+                <div class="chart-column">
+                    <div class="chart-bar-track">
+                        <div class="chart-bar {{ color_class }}" style="height: {{ 12 + (bar_height * 0.88) if value else 0 }}%"></div>
+                    </div>
+                    <span>{{ label }}</span>
+                    <strong>{{ fmt_money(value) }}</strong>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="erp-panel mt-3">
+    <h2 class="erp-title">Fee Summary</h2>
+    <div class="table-responsive">
+        <table class="report-table">
+            <thead><tr><th>Particulars</th><th>Actual Receivable</th><th>Discounts</th><th>Net Receivable</th><th>Collections</th><th>Balance Due</th><th>Collection %</th></tr></thead>
+            <tbody>
+            {% for name, row in financial.items() %}
+            <tr class="dash"><td>{{ name }}</td><td>{{ fmt_money(row.actual_receivable) }}</td><td>{{ fmt_money(row.discounts) }}</td><td>{{ fmt_money(row.net_receivable) }}</td><td>{{ fmt_money(row.collections) }}</td><td>{{ fmt_money(row.balance_due) }}</td><td>{{ "%.2f"|format(row.collection_pct) }}%</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="erp-panel mt-3">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <h2 class="erp-title mb-1">Payment Mode Summary</h2>
+            <div class="text-muted small">Collections grouped dynamically from receipt entries.</div>
+        </div>
+        <div class="d-flex gap-2 no-print">
+            <a class="btn btn-outline-primary btn-sm" href="{{ url_for('dashboard.payment_mode_export', fmt='pdf', **payment_filters) }}"><i class="bi bi-filetype-pdf"></i> PDF</a>
+            <a class="btn btn-outline-success btn-sm" href="{{ url_for('dashboard.payment_mode_export', fmt='xlsx', **payment_filters) }}"><i class="bi bi-file-earmark-excel"></i> Excel</a>
+        </div>
+    </div>
+    <form class="row g-3 align-items-end payment-filter-bar no-print mb-4">
+        <div class="col-md-2">
+            <label class="form-label">Academic Year</label>
+            <input class="form-control" name="academic_year" value="{{ payment_filters.academic_year }}">
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Date From</label>
+            <input type="date" class="form-control" name="date_from" value="{{ payment_filters.date_from }}">
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Date To</label>
+            <input type="date" class="form-control" name="date_to" value="{{ payment_filters.date_to }}">
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Month</label>
+            <input type="month" class="form-control" name="month" value="{{ payment_filters.month }}">
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Class/Grade</label>
+            <select class="form-select" name="grade">
+                <option value="">All Grades</option>
+                {% for grade in grades %}
+                <option value="{{ grade }}" {% if payment_filters.grade == grade %}selected{% endif %}>{{ grade }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2 d-grid">
+            <button class="btn btn-primary"><i class="bi bi-funnel"></i> Apply</button>
+        </div>
+    </form>
+
+    <div class="row g-3 mb-4">
+        {% set mode_icons = {'Cash':'bi-cash-stack','UPI':'bi-phone','Bank Transfer':'bi-bank','Card':'bi-credit-card','Cheque':'bi-receipt'} %}
+        {% set mode_classes = ['mode-cash','mode-upi','mode-bank','mode-card','mode-cheque'] %}
+        {% for row in payment_modes.modes %}
+        <div class="col-sm-6 col-xl">
+            <div class="payment-mode-card {{ mode_classes[loop.index0 % mode_classes|length] }}">
+                <div class="payment-mode-icon"><i class="bi {{ mode_icons.get(row.payment_mode, 'bi-wallet2') }}"></i></div>
+                <span>{{ row.payment_mode }}</span>
+                <strong>{{ fmt_money(row.collections) }}</strong>
+                <small>{{ "%.2f"|format(row.percentage) }}% of total</small>
+            </div>
+        </div>
+        {% endfor %}
+        <div class="col-sm-6 col-xl">
+            <div class="payment-mode-card mode-total">
+                <div class="payment-mode-icon"><i class="bi bi-bar-chart-fill"></i></div>
+                <span>Overall Total</span>
+                <strong>{{ fmt_money(payment_modes.overall_total) }}</strong>
+                <small>{{ payment_modes.modes|sum(attribute='receipt_count') }} receipts</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-4">
+            <div class="analytics-card">
+                <h3>Mode Distribution</h3>
+                <canvas id="paymentModeChart" height="240"></canvas>
+            </div>
+        </div>
+        <div class="col-lg-8">
+            <div class="analytics-card">
+                <h3>Monthly Payment Mode Trend</h3>
+                <canvas id="paymentTrendChart" height="118"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="analytics-card mt-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h3 class="mb-0">Recent Transactions</h3>
+            <span class="text-muted small">Latest 8 receipts</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover align-middle">
+                <thead class="table-light"><tr><th>Receipt No</th><th>Date</th><th>Student</th><th>Class</th><th>Mode</th><th>Amount</th></tr></thead>
+                <tbody>
+                {% for receipt in payment_modes.recent %}
+                <tr><td class="fw-semibold">{{ receipt.receipt_no }}</td><td>{{ receipt.receipt_date }}</td><td>{{ receipt.student_name }}</td><td>{{ receipt.class_name or receipt.grade }}</td><td>{{ receipt.payment_mode }}</td><td>{{ fmt_money(receipt.current_payment or receipt.amount_paid) }}</td></tr>
+                {% else %}
+                <tr><td colspan="6" class="text-center text-muted py-4">No recent receipt transactions found.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+window.dashboardPaymentModes = {{ payment_modes.chart|tojson }};
+window.dashboardPaymentTrend = {{ payment_modes.trend|tojson }};
+</script>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "super_admin/_layout.html" %}
+{% block content %}
+<h1 class="h4 mb-3">Billing / Renewals</h1>
+<div class="erp-panel">
+    <table class="table table-hover align-middle">
+        <thead><tr><th>School</th><th>Expiry</th><th>Payment</th><th>Renewal</th></tr></thead>
+        <tbody>
+        {% for school in schools %}
+        <tr>
+            <td><strong>{{ school.school_name }}</strong><br><small>{{ school.school_id }}</small></td>
+            <td>{{ school.expiry_date }}</td>
+            <td>{{ school.payment_status or "pending" }} · {{ fmt_money(school.amount_paid) }}</td>
+            <td>
+                <form class="row g-2" method="post" action="{{ url_for('super_admin.renew_school', school_id=school.school_id) }}">
+                    <div class="col-md-4"><input class="form-control form-control-sm" type="date" name="expiry_date" value="{{ school.expiry_date }}" required></div>
+                    <div class="col-md-3"><input class="form-control form-control-sm" name="amount_paid" value="{{ school.amount_paid or 0 }}"></div>
+                    <div class="col-md-3"><select class="form-select form-select-sm" name="payment_status"><option>paid</option><option {% if school.payment_status=="pending" %}selected{% endif %}>pending</option></select></div>
+                    <div class="col-md-2"><button class="btn btn-sm btn-primary w-100">Save</button></div>
+                </form>
+            </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4" class="text-center text-muted">No schools found</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

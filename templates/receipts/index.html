@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <h1 class="h4 mb-1">Receipts</h1>
+        <div class="text-muted">Create fee collection entries and track receipt history.</div>
+    </div>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#receiptModal">
+        <i class="bi bi-plus-lg"></i> Add Receipt
+    </button>
+</div>
+
+<div class="erp-panel">
+    <form method="get" class="row g-2 align-items-end">
+        <div class="col-md-7">
+            <label class="form-label">Student Search</label>
+            <input class="form-control" name="search" value="{{ search }}" placeholder="Search by admission no, student name, or mobile number">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label">Receipt Search</label>
+            <input class="form-control" name="receipt_search" value="{{ receipt_search }}" placeholder="Receipt no, student, mobile">
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-primary w-100"><i class="bi bi-search"></i> Search</button>
+        </div>
+    </form>
+</div>
+
+{% if student %}
+<div class="erp-panel">
+    <h2 class="erp-title">Student Financial Details</h2>
+    <div class="table-responsive">
+        <table class="table table-bordered">
+            <tr><th>Student Name</th><td>{{ student.student_name }}</td><th>Grade</th><td>{{ student.grade }}</td></tr>
+            <tr><th>Total Fee</th><td>{{ fmt_money(student.total_fee) }}</td><th>Discount</th><td>{{ fmt_money(student.discount_amount) }}</td></tr>
+            <tr><th>Net Receivable</th><td>{{ fmt_money(student.net_receivable) }}</td><th>Total Paid</th><td>{{ fmt_money(student.total_paid) }}</td></tr>
+            <tr><th>Balance Due</th><td colspan="3">{{ fmt_money(student.balance_due) }}</td></tr>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<div class="erp-panel">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+        <div>
+            <h2 class="erp-title mb-1">Advanced Receipt Filters</h2>
+            <div class="text-muted small">Filter receipt history by class, student, payment mode and receipt date.</div>
+        </div>
+        <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('receipts.index', search=search, receipt_search=receipt_search) }}"><i class="bi bi-arrow-counterclockwise"></i> Reset Filter</a>
+    </div>
+    <form method="get" class="receipt-filter-toolbar" data-receipt-filter-form>
+        <input type="hidden" name="search" value="{{ search }}">
+        <input type="hidden" name="receipt_search" value="{{ receipt_search }}">
+        <div>
+            <label class="form-label">Class</label>
+            <select class="form-select" name="grade" data-receipt-filter-grade>
+                <option value="">All Classes</option>
+                {% for grade in grades %}
+                <option value="{{ grade }}" {% if filters.grade == grade %}selected{% endif %}>{{ grade }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label class="form-label">Student</label>
+            <select class="form-select" name="student_id" data-receipt-filter-student data-selected-student="{{ filters.student_id }}">
+                <option value="">All Students</option>
+                {% for student_row in filter_students %}
+                <option value="{{ student_row._id }}" {% if filters.student_id == student_row._id|string %}selected{% endif %}>{{ student_row.student_name }}{% if student_row.admission_no %} ({{ student_row.admission_no }}){% endif %}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label class="form-label">Payment Mode</label>
+            <select class="form-select" name="payment_mode">
+                <option value="">All Modes</option>
+                {% for mode in ['Cash', 'UPI', 'Card', 'Bank Transfer', 'Cheque'] %}
+                <option value="{{ mode }}" {% if filters.payment_mode == mode %}selected{% endif %}>{{ mode }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label class="form-label">From Date</label>
+            <input type="date" class="form-control" name="date_from" value="{{ filters.date_from }}">
+        </div>
+        <div>
+            <label class="form-label">To Date</label>
+            <input type="date" class="form-control" name="date_to" value="{{ filters.date_to }}">
+        </div>
+        <div class="receipt-filter-actions">
+            <button class="btn btn-primary"><i class="bi bi-search"></i> Search</button>
+            <a class="btn btn-outline-secondary" href="{{ url_for('receipts.index', search=search, receipt_search=receipt_search) }}">Reset</a>
+        </div>
+    </form>
+</div>
+
+<div class="receipt-summary-grid">
+    <div class="receipt-summary-card">
+        <span class="receipt-summary-icon receipt-summary-blue"><i class="bi bi-receipt"></i></span>
+        <div><span>Total Receipts</span><strong>{{ receipt_summary.total_receipts }}</strong></div>
+    </div>
+    <div class="receipt-summary-card">
+        <span class="receipt-summary-icon receipt-summary-green"><i class="bi bi-cash-coin"></i></span>
+        <div><span>Total Collection</span><strong>{{ fmt_money(receipt_summary.total_collection) }}</strong></div>
+    </div>
+    <div class="receipt-summary-card">
+        <span class="receipt-summary-icon receipt-summary-orange"><i class="bi bi-exclamation-circle"></i></span>
+        <div><span>Pending Due</span><strong>{{ fmt_money(receipt_summary.pending_due) }}</strong></div>
+    </div>
+    <div class="receipt-summary-card">
+        <span class="receipt-summary-icon receipt-summary-purple"><i class="bi bi-calendar-check"></i></span>
+        <div><span>Last Payment Date</span><strong>{{ receipt_summary.last_payment_date }}</strong></div>
+    </div>
+</div>
+
+<div class="erp-panel receipt-history-panel">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h2 class="erp-title mb-0">Receipt History</h2>
+        <span class="text-muted small">{{ total_receipts }} record{{ "" if total_receipts == 1 else "s" }}</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Receipt No</th>
+                    <th>Date</th>
+                    <th>Student</th>
+                    <th>Class</th>
+                    <th>Mobile</th>
+                    <th>Amount</th>
+                    <th>Mode</th>
+                    <th>Balance Due</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for p in recent %}
+            <tr>
+                <td class="fw-semibold">{{ p.receipt_no }}</td>
+                <td>{{ p.receipt_date }}</td>
+                <td>{{ p.student_name }}</td>
+                <td>{{ p.class_name or p.grade }}</td>
+                <td>{{ p.mobile or "-" }}</td>
+                <td>{{ fmt_money(p.current_payment or p.amount_paid) }}</td>
+                <td><span class="badge rounded-pill text-bg-light border">{{ p.payment_mode }}</span></td>
+                <td>{{ fmt_money(p.balance_due) }}</td>
+                <td class="text-nowrap">
+                    <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('receipts.print_receipt', receipt_no=p.receipt_no) }}"><i class="bi bi-printer"></i></a>
+                    <a class="btn btn-sm btn-outline-primary" href="{{ url_for('receipts.pdf', receipt_no=p.receipt_no) }}"><i class="bi bi-filetype-pdf"></i></a>
+                    <form class="d-inline" method="post" action="{{ url_for('receipts.delete', receipt_no=p.receipt_no) }}" onsubmit="return confirm('Delete this receipt and recalculate balances?')">
+                        <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="9" class="text-center py-5">
+                    <div class="empty-state">
+                        <i class="bi bi-receipt"></i>
+                        <strong>No receipts found</strong>
+                        <span>Create a new receipt to start tracking fee collections.</span>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if total_receipts > per_page %}
+    <div class="d-flex justify-content-end gap-2 mt-3">
+        {% if page > 1 %}
+        <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('receipts.index', page=page-1, search=search, receipt_search=receipt_search, grade=filters.grade, student_id=filters.student_id, payment_mode=filters.payment_mode, date_from=filters.date_from, date_to=filters.date_to) }}">Previous</a>
+        {% endif %}
+        <span class="btn btn-light btn-sm disabled">Page {{ page }}</span>
+        {% if page * per_page < total_receipts %}
+        <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('receipts.index', page=page+1, search=search, receipt_search=receipt_search, grade=filters.grade, student_id=filters.student_id, payment_mode=filters.payment_mode, date_from=filters.date_from, date_to=filters.date_to) }}">Next</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<div class="modal fade" id="receiptModal" tabindex="-1" aria-labelledby="receiptModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content receipt-modal">
+            <div class="modal-header">
+                <div>
+                    <h2 class="modal-title fs-5" id="receiptModalLabel">Create Receipt Entry</h2>
+                    <div class="text-muted small">Select class and student to auto-fetch fee details.</div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{{ url_for('receipts.create') }}" data-receipt-form>
+                <div class="modal-body">
+                    <input type="hidden" name="student_id" data-receipt-student-id>
+                    <input type="hidden" name="fee_structure_id" data-receipt-fee-structure-id>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Academic Year</label>
+                            <input class="form-control" name="academic_year" value="{{ active_year }}" readonly data-receipt-year>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Grade/Class</label>
+                            <select class="form-select" name="grade" required data-receipt-grade>
+                                <option value="">Select Class</option>
+                                {% for grade in grades %}
+                                <option>{{ grade }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Student Name</label>
+                            <select class="form-select" required data-receipt-student>
+                                <option value="">Select student</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Admission Number</label>
+                            <input class="form-control" readonly data-receipt-admission>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Mobile Number</label>
+                            <input class="form-control" readonly data-receipt-mobile>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Total Fee</label>
+                            <input class="form-control" readonly data-receipt-total-fee>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Previously Paid Amount</label>
+                            <input class="form-control" readonly data-receipt-paid-before>
+                        </div>
+                    </div>
+
+                    <div class="receipt-preview-grid my-4">
+                        <div><span>Pending Before</span><strong data-preview-pending>0.00</strong></div>
+                        <div><span>Current Payment</span><strong data-preview-payment>0.00</strong></div>
+                        <div><span>Discount/Scholarship</span><strong data-preview-discount>0.00</strong></div>
+                        <div><span>Remaining Balance</span><strong data-preview-balance>0.00</strong></div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Pending Due</label>
+                            <input class="form-control" readonly data-receipt-pending>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Current Payment Amount</label>
+                            <input class="form-control" name="current_payment" required data-current-payment>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Discount/Scholarship</label>
+                            <input class="form-control" name="discount" value="0" data-current-discount>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Receipt Date</label>
+                            <input type="date" class="form-control" name="receipt_date" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Payment Mode</label>
+                            <select class="form-select" name="payment_mode" required>
+                                <option value="">Select Mode</option>
+                                <option>Cash</option>
+                                <option>UPI</option>
+                                <option>Bank Transfer</option>
+                                <option>Card</option>
+                                <option>Cheque</option>
+                            </select>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label">Transaction Reference</label>
+                            <input class="form-control" name="transaction_ref" placeholder="UPI ref, cheque no, bank transaction id">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Fee Structure</label>
+                            <div class="fee-head-grid" data-fee-heads>
+                                <span class="text-muted">Select a student to view fee heads.</span>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Remarks</label>
+                            <textarea class="form-control" name="remarks" placeholder="Optional notes"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button class="btn btn-primary" data-receipt-submit><i class="bi bi-save"></i> Save Receipt</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% set export_name = "discounts" %}
+{% block content %}
+{% include "reports/_actions.html" %}
+<div class="report-page">
+    <h1 class="report-heading">Student Discounts Report</h1>
+    <div class="section-caption"><span>Discounts</span><span>Year : {{ year }}</span></div>
+    <table class="report-table">
+        <thead><tr><th>Grade</th><th>Student Count</th><th>Discount Amount</th></tr></thead>
+        <tbody>{% for r in rows %}<tr class="dash"><td>{{ r.grade }}</td><td>{{ r.student_count }}</td><td>{{ fmt_money(r.discount_amount) }}</td></tr>{% else %}<tr><td colspan="3" class="text-center">No discounts</td></tr>{% endfor %}</tbody>
+    </table>
+</div>
+{% endblock %}

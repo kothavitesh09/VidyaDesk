@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% set export_name = "collections" %}
+{% block content %}
+{% include "reports/_actions.html" %}
+<div class="report-page">
+    <h1 class="report-heading">Fees Collection Report</h1>
+    {% for name, grades in rows.items() %}
+    <div class="section-caption"><span>{{ name }}s - Fees Collection Report</span><span>Year : {{ year }}</span></div>
+    <table class="report-table mb-4">
+        <thead><tr><th>Grade</th><th>Receivable</th><th>Collections</th><th>Balance Due</th><th>% of Collection</th></tr></thead>
+        <tbody>
+        {% for grade, r in grades.items() %}
+        {% if grade != "_total" %}
+        <tr class="dash"><td>{{ grade }}</td><td>{{ fmt_money(r.receivable) }}</td><td>{{ fmt_money(r.collections) }}</td><td>{{ fmt_money(r.balance_due) }}</td><td>{{ "%.2f"|format(r.collection_pct) }}%</td></tr>
+        {% endif %}
+        {% endfor %}
+        <tr class="total-row"><td>Total</td><td>{{ fmt_money(grades._total.receivable) }}</td><td>{{ fmt_money(grades._total.collections) }}</td><td>{{ fmt_money(grades._total.balance_due) }}</td><td>{{ "%.2f"|format(grades._total.collection_pct) }}%</td></tr>
+        </tbody>
+    </table>
+    {% endfor %}
+</div>
+{% endblock %}

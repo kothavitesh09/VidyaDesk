@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% set export_name = "receipt_history" %}
+{% block content %}
+{% include "reports/_actions.html" %}
+<div class="report-page">
+    <h1 class="report-heading">Receipt History</h1>
+    <div class="section-caption"><span>All Receipts</span><span>Year : {{ year }}</span></div>
+    <table class="report-table">
+        <thead><tr><th>Receipt No</th><th>Date</th><th>Student</th><th>Class</th><th>Amount</th><th>Mode</th><th>Balance Due</th></tr></thead>
+        <tbody>{% for r in rows %}<tr class="dash"><td>{{ r.receipt_no }}</td><td>{{ r.receipt_date }}</td><td>{{ r.student_name }}</td><td>{{ r.class_name or r.grade }}</td><td>{{ fmt_money(r.current_payment) }}</td><td>{{ r.payment_mode }}</td><td>{{ fmt_money(r.balance_due) }}</td></tr>{% else %}<tr><td colspan="7" class="text-center">No receipts found</td></tr>{% endfor %}</tbody>
+    </table>
+    {% if total > per_page %}
+    <div class="no-print d-flex justify-content-between align-items-center mt-3">
+        <span class="text-muted small">Showing {{ ((page - 1) * per_page) + 1 }}-{{ page * per_page if page * per_page < total else total }} of {{ total }}</span>
+        <div class="d-flex gap-2">
+            {% if page > 1 %}<a class="btn btn-outline-secondary btn-sm" href="{{ url_for('reports.receipt_history', academic_year=year, page=page-1, per_page=per_page) }}">Previous</a>{% endif %}
+            {% if page * per_page < total %}<a class="btn btn-outline-secondary btn-sm" href="{{ url_for('reports.receipt_history', academic_year=year, page=page+1, per_page=per_page) }}">Next</a>{% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

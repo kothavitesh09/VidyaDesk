@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% set export_name = "fee_structure" %}
+{% block content %}
+{% include "reports/_actions.html" %}
+<div class="report-page">
+    <h1 class="report-heading">Fee Structure Report</h1>
+    <div class="section-caption"><span>Saved Fee Structures</span><span>Year : {{ year }}</span></div>
+    <table class="report-table mb-4">
+        <thead>
+        <tr><th>Name</th><th>Grade</th><th>Type</th><th>Fee Heads</th><th>Total Fee</th></tr>
+        </thead>
+        <tbody>
+        {% for row in rows %}
+        <tr class="dash">
+            <td>{{ row.fee_structure_name or row.grade }}</td>
+            <td>{{ row.grade or row.class_name }}</td>
+            <td>{{ "Manual / Custom" if row.fee_structure_type == "manual" else "Standard" }}</td>
+            <td>{% if row.fee_heads %}{% for head in row.fee_heads %}{{ head.name }}: {{ fmt_money(head.amount) }}{% if not loop.last %}, {% endif %}{% endfor %}{% else %}{% for key, label in fee_heads %}{{ label }}: {{ fmt_money(row.get(key, 0)) }}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}</td>
+            <td>{{ fmt_money(row.total_amount or row.total_fee) }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-center">No fee structures saved</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

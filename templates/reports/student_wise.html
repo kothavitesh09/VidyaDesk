@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% set export_name = "student_wise" %}
+{% block content %}
+<div class="no-print erp-panel">
+    <form method="get" class="row g-3 align-items-end">
+        <div class="col-md-4"><label class="form-label">Select Grade/Class</label><select class="form-select" data-student-grade><option value="">Select Grade</option>{% for g in grades %}<option>{{ g }}</option>{% endfor %}</select></div>
+        <div class="col-md-5"><label class="form-label">Select Student</label><select class="form-select" name="student_id" data-student-select><option value="">Select Student</option></select></div>
+        <div class="col-md-3"><button class="btn btn-primary w-100"><i class="bi bi-eye"></i> View Report</button></div>
+    </form>
+</div>
+{% if student %}
+{% set label, color = student_status(balance_due, total_paid) %}
+<div class="no-print d-flex justify-content-end gap-2 mb-3">
+    <button class="btn btn-primary" onclick="window.print()"><i class="bi bi-printer"></i> Print Report</button>
+    <a class="btn btn-outline-primary" href="{{ url_for('reports.student_wise_pdf', student_id=student._id) }}"><i class="bi bi-filetype-pdf"></i> Export PDF</a>
+</div>
+<div class="report-page">
+    <h1 class="report-heading">Student Wise Report</h1>
+    <div class="d-flex justify-content-between mb-2"><strong>Year : {{ year }}</strong><span class="status-pill text-bg-{{ color }}">{{ label }}</span></div>
+    <div class="section-caption"><span>Student Details</span></div>
+    <table class="report-table mb-3">
+        <tbody>
+        <tr><th>Admission No</th><td>{{ student.admission_no }}</td><th>Student Name</th><td>{{ student.student_name }}</td></tr>
+        <tr><th>Grade</th><td>{{ student.grade }}</td><th>Student Type</th><td>{{ student.student_type }}</td></tr>
+        <tr><th>Mobile Number</th><td colspan="3">{{ student.mobile }}</td></tr>
+        </tbody>
+    </table>
+    <div class="section-caption"><span>Fee Structure</span></div>
+    <table class="report-table mb-3">
+        <thead><tr><th>Fee Head</th><th>Amount</th></tr></thead>
+        <tbody>{% for head in effective_fee.fee_heads %}<tr class="dash"><td>{{ head.name }}</td><td>{{ fmt_money(head.amount) }}</td></tr>{% endfor %}<tr class="total-row"><td>Total Fee</td><td>{{ fmt_money(effective_fee.total_fee) }}</td></tr></tbody>
+    </table>
+    <div class="section-caption"><span>Discounts</span></div>
+    <table class="report-table mb-3"><tbody><tr><th>Discount Amount</th><td>{{ fmt_money(effective_fee.discount) }}</td><th>Reason</th><td>{{ student.discount_reason }}</td></tr></tbody></table>
+    <div class="section-caption"><span>Payment History</span></div>
+    <table class="report-table mb-3">
+        <thead><tr><th>Receipt No</th><th>Date</th><th>Amount</th><th>Payment Mode</th></tr></thead>
+        <tbody>{% for p in payments %}<tr class="dash"><td>{{ p.receipt_no }}</td><td>{{ p.receipt_date }}</td><td>{{ fmt_money(p.amount_paid) }}</td><td>{{ p.payment_mode }}</td></tr>{% else %}<tr><td colspan="4" class="text-center">No payments</td></tr>{% endfor %}</tbody>
+    </table>
+    <div class="section-caption"><span>Final Summary</span></div>
+    <table class="report-table"><tbody><tr><th>Total Receivable</th><td>{{ fmt_money(effective_fee.net_receivable) }}</td><th>Total Paid</th><td>{{ fmt_money(total_paid) }}</td><th>Balance Due</th><td>{{ fmt_money(balance_due) }}</td></tr></tbody></table>
+</div>
+{% endif %}
+{% endblock %}

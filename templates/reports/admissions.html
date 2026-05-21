@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% set export_name = "admissions" %}
+{% block content %}
+{% include "reports/_actions.html" %}
+<div class="report-page">
+    <h1 class="report-heading">Students Admissions Report</h1>
+    {% for name, block in blocks.items() %}
+    {% set rows, totals = block %}
+    <div class="section-caption"><span>{{ name }}s</span><span>Year : {{ year }}</span></div>
+    <table class="report-table mb-4">
+        <thead><tr><th rowspan="2">Grade</th><th colspan="3">Old Students</th><th colspan="3">New Students</th><th colspan="3">Total Students</th></tr><tr><th>Boys Old</th><th>Girls Old</th><th>Total Students Old</th><th>Boys New</th><th>Girls New</th><th>Total Students New</th><th>Total Boys</th><th>Total Girls</th><th>Total Students</th></tr></thead>
+        <tbody>
+        {% for grade, r in rows.items() %}<tr class="dash"><td>{{ grade }}</td><td>{{ r.old_boys }}</td><td>{{ r.old_girls }}</td><td>{{ r.old_total }}</td><td>{{ r.new_boys }}</td><td>{{ r.new_girls }}</td><td>{{ r.new_total }}</td><td>{{ r.total_boys }}</td><td>{{ r.total_girls }}</td><td>{{ r.total }}</td></tr>{% endfor %}
+        <tr class="total-row"><td>Total Students</td><td>{{ totals.old_boys }}</td><td>{{ totals.old_girls }}</td><td>{{ totals.old_total }}</td><td>{{ totals.new_boys }}</td><td>{{ totals.new_girls }}</td><td>{{ totals.new_total }}</td><td>{{ totals.total_boys }}</td><td>{{ totals.total_girls }}</td><td>{{ totals.total }}</td></tr>
+        </tbody>
+    </table>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "super_admin/_layout.html" %}
+{% block content %}
+<h1 class="h4 mb-3">School Requests</h1>
+<div class="erp-panel">
+    <table class="table table-hover align-middle">
+        <thead><tr><th>School</th><th>Contact</th><th>Email</th><th>Phone</th><th>Created</th><th class="text-end">Actions</th></tr></thead>
+        <tbody>
+        {% for school in schools %}
+        <tr>
+            <td><strong>{{ school.school_name }}</strong><br><small>{{ school.school_id }}</small></td>
+            <td>{{ school.contact_person }}</td>
+            <td>{{ school.email }}</td>
+            <td>{{ school.phone }}</td>
+            <td>{{ school.created_at }}</td>
+            <td class="text-end">
+                <form class="d-inline" method="post" action="{{ url_for('super_admin.approve_school', school_id=school.school_id) }}"><input type="hidden" name="expiry_date" value="{{ school.expiry_date }}"><button class="btn btn-sm btn-success">Approve</button></form>
+                <form class="d-inline" method="post" action="{{ url_for('super_admin.reject_school', school_id=school.school_id) }}"><button class="btn btn-sm btn-outline-danger">Reject</button></form>
+            </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-center text-muted">No pending requests</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

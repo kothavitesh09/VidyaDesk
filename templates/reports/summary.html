@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% set export_name = "summary" %}
+{% block content %}
+{% include "reports/_actions.html" %}
+<div class="report-page">
+    <h1 class="report-heading">SUMMARY REPORT</h1>
+    <div class="section-caption"><span>Students Admissions</span><span>Year : {{ year }}</span></div>
+    <table class="report-table">
+        <thead><tr><th rowspan="2">Particulars</th><th colspan="3">Old Students</th><th colspan="3">New Students</th><th colspan="3">Total Students</th></tr><tr><th>Boys Old</th><th>Girls Old</th><th>Total</th><th>Boys New</th><th>Girls New</th><th>Total</th><th>Total Boys</th><th>Total Girls</th><th>Total</th></tr></thead>
+        <tbody>
+        {% for name, block in admissions.items() %}{% set rows, t = block %}<tr class="dash"><td>{{ name }}</td><td>{{ t.old_boys }}</td><td>{{ t.old_girls }}</td><td>{{ t.old_total }}</td><td>{{ t.new_boys }}</td><td>{{ t.new_girls }}</td><td>{{ t.new_total }}</td><td>{{ t.total_boys }}</td><td>{{ t.total_girls }}</td><td>{{ t.total }}</td></tr>{% endfor %}
+        </tbody>
+    </table>
+    <div class="section-caption"><span>Fees Receivable Report</span><span>Year : {{ year }}</span></div>
+    <table class="report-table">
+        <thead><tr><th>Particulars</th><th>Actual Receivables</th><th>Discounts</th><th>Net Receivables</th></tr></thead>
+        <tbody>{% for name, r in financial.items() %}<tr class="dash"><td>{{ name }}</td><td>{{ fmt_money(r.actual_receivable) }}</td><td>{{ fmt_money(r.discounts) }}</td><td>{{ fmt_money(r.net_receivable) }}</td></tr>{% endfor %}</tbody>
+    </table>
+    <div class="section-caption"><span>Fees Collection Report</span><span>Year : {{ year }}</span></div>
+    <table class="report-table">
+        <thead><tr><th>Particulars</th><th>Receivables</th><th>Collections</th><th>Balance Due</th><th>% of Collection</th></tr></thead>
+        <tbody>{% for name, r in financial.items() %}<tr class="dash"><td>{{ name }}</td><td>{{ fmt_money(r.net_receivable) }}</td><td>{{ fmt_money(r.collections) }}</td><td>{{ fmt_money(r.balance_due) }}</td><td>{{ "%.2f"|format(r.collection_pct) }}%</td></tr>{% endfor %}</tbody>
+    </table>
+</div>
+{% endblock %}

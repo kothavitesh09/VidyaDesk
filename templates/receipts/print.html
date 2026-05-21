@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="no-print mb-3 text-end">
+    <button class="btn btn-primary" onclick="window.print()"><i class="bi bi-printer"></i> Print Receipt</button>
+    <a class="btn btn-outline-primary" href="{{ url_for('receipts.pdf', receipt_no=payment.receipt_no) }}"><i class="bi bi-filetype-pdf"></i> Download PDF</a>
+</div>
+<div class="receipt-box">
+    <h1 class="report-heading">RECEIPT</h1>
+    <div class="d-flex justify-content-between mb-2"><strong>Receipt No: {{ payment.receipt_no }}</strong><strong>Date: {{ payment.receipt_date }}</strong></div>
+    <table class="report-table">
+        <thead><tr><th>Date</th><th>Roll No</th><th>Grade</th><th>Name of the Student</th><th>Amt Rs.</th><th>Payment Mode</th><th>Transaction Ref</th></tr></thead>
+        <tbody>
+        <tr class="dash"><td>{{ payment.receipt_date }}</td><td>{{ student.roll_no }}</td><td>{{ student.grade }}</td><td>{{ student.student_name }}</td><td>{{ fmt_money(payment.current_payment or payment.amount_paid) }}</td><td>{{ payment.payment_mode }}</td><td>{{ payment.transaction_ref or payment.cheque_no }}</td></tr>
+        <tr><td colspan="3"><strong>Admission No:</strong> {{ student.admission_no }}</td><td colspan="2"><strong>Paid Before:</strong> {{ fmt_money(payment.amount_paid_before) }}</td><td colspan="2"><strong>Balance Due:</strong> {{ fmt_money(payment.balance_due if payment.balance_due is defined else student.balance_due) }}</td></tr>
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends "super_admin/_layout.html" %}
+{% block content %}
+<h1 class="h4 mb-3">Audit Logs</h1>
+<div class="erp-panel">
+    <table class="table table-hover align-middle">
+        <thead><tr><th>Time</th><th>Action</th><th>Actor</th><th>School</th><th>Details</th></tr></thead>
+        <tbody>{% for log in logs %}<tr><td>{{ log.created_at }}</td><td>{{ log.action }}</td><td>{{ log.actor_type }} / {{ log.actor_username }}</td><td>{{ log.school_id }}</td><td><code>{{ log.details }}</code></td></tr>{% else %}<tr><td colspan="5" class="text-muted text-center">No logs</td></tr>{% endfor %}</tbody>
+    </table>
+</div>
+{% endblock %}

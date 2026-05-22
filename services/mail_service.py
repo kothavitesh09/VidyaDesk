@@ -13,7 +13,7 @@ def send_email(to_email, subject, body):
             f"{worker_url}/send-email",
             headers={"Authorization": f"Bearer {api_key}"},
             json={"to": to_email, "subject": subject, "body": body},
-            timeout=15,
+            timeout=90,
         )
         if 200 <= response.status_code < 300:
             return {"success": True, "error": ""}

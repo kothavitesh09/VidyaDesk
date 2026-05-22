@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <h1 class="h4 mb-1">Email Templates</h1>
+        <div class="text-muted">Create reusable notices, fee reminders and announcements.</div>
+    </div>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#templateModal"><i class="bi bi-plus-lg"></i> New Template</button>
+</div>
+
+<div class="communication-grid">
+    <div class="erp-panel">
+        <h2 class="erp-title">Saved Templates</h2>
+        <div class="template-list">
+            {% for template in templates %}
+            <div class="template-card" data-template-card>
+                <div>
+                    <strong>{{ template.template_name }}</strong>
+                    <span>{{ template.subject }}</span>
+                </div>
+                <div class="template-actions">
+                    <button class="icon-btn" title="Preview" data-preview-subject="{{ template.subject|e }}" data-preview-body="{{ template.body|e }}" data-sample='{{ sample_context|tojson }}'><i class="bi bi-eye"></i></button>
+                    <button class="icon-btn" title="Edit" data-bs-toggle="modal" data-bs-target="#templateModal" data-template-id="{{ template._id }}" data-template-name="{{ template.template_name|e }}" data-template-subject="{{ template.subject|e }}" data-template-body="{{ template.body|e }}"><i class="bi bi-pencil"></i></button>
+                    <form method="post" action="{{ url_for('communication.delete_template', template_id=template._id) }}" onsubmit="return confirm('Delete this email template?')">
+                        <button class="icon-btn danger" title="Delete"><i class="bi bi-trash"></i></button>
+                    </form>
+                </div>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="bi bi-envelope-paper"></i>
+                <strong>No templates yet</strong>
+                <span>Create your first template to start sending emails.</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="erp-panel">
+        <h2 class="erp-title">Variable Helper</h2>
+        <div class="placeholder-grid">
+            {% for key in placeholders %}
+            <button type="button" class="placeholder-chip" data-placeholder="{{ '{{' ~ key ~ '}}' }}">{{ "{{" ~ key ~ "}}" }}</button>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="templateModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <form class="modal-content" method="post" data-template-form>
+            <div class="modal-header">
+                <h2 class="modal-title fs-5" data-template-title>Email Template</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="template_id" data-template-id-field>
+                <div class="row g-3">
+                    <div class="col-md-5"><label class="form-label">Template Name</label><input class="form-control" name="template_name" required data-template-name-field></div>
+                    <div class="col-md-7"><label class="form-label">Subject</label><input class="form-control" name="subject" required data-template-subject-field></div>
+                    <div class="col-12"><label class="form-label">Body</label><textarea class="form-control template-body-field" name="body" rows="10" required data-template-body-field></textarea></div>
+                </div>
+                <div class="placeholder-grid mt-3">
+                    {% for key in placeholders %}
+                    <button type="button" class="placeholder-chip" data-placeholder="{{ '{{' ~ key ~ '}}' }}">{{ "{{" ~ key ~ "}}" }}</button>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button class="btn btn-primary"><i class="bi bi-save"></i> Save Template</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="emailPreviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title fs-5">Template Preview</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h3 class="h6" data-preview-title></h3>
+                <div class="email-preview-box" data-preview-content></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

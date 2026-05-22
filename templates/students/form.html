@@ -15,8 +15,9 @@
     <div class="row g-3 mb-3">
         <div class="col-md-3"><label class="form-label">Academic Year</label><select class="form-select" name="academic_year" data-fee-lookup required>{% for year in academic_years() %}<option value="{{ year.name }}" {% if (student.academic_year or active_year) == year.name %}selected{% endif %}>{{ year.name }}</option>{% endfor %}</select></div>
         <div class="col-md-3"><label class="form-label">Grade/Class</label><select class="form-select" name="grade" data-fee-lookup required><option value="">Select</option>{% for g in grades %}<option {% if student.grade==g %}selected{% endif %}>{{ g }}</option>{% endfor %}</select></div>
+        <div class="col-md-2"><label class="form-label">Section</label><input class="form-control" name="section" value="{{ student.section }}" placeholder="A"></div>
         <div class="col-md-3"><label class="form-label">Old/New Student</label><select class="form-select" name="student_status"><option {% if student.student_status=="Old" %}selected{% endif %}>Old</option><option {% if student.student_status=="New" %}selected{% endif %}>New</option></select></div>
-        <div class="col-md-3"><label class="form-label">Student Type</label><select class="form-select" name="student_type" data-fee-lookup><option {% if student.student_type=="Day Scholar" %}selected{% endif %}>Day Scholar</option><option {% if student.student_type=="Residential" %}selected{% endif %}>Residential</option></select></div>
+        <div class="col-md-2"><label class="form-label">Student Type</label><select class="form-select" name="student_type" data-fee-lookup><option {% if student.student_type=="Day Scholar" %}selected{% endif %}>Day Scholar</option><option {% if student.student_type=="Residential" %}selected{% endif %}>Residential</option></select></div>
     </div>
     <h2 class="erp-title">C - Parent Details</h2>
     <div class="row g-3 mb-3">
@@ -24,6 +25,7 @@
         <div class="col-md-3"><label class="form-label">Mother Name</label><input class="form-control" name="mother_name" value="{{ student.mother_name }}"></div>
         <div class="col-md-3"><label class="form-label">Mobile Number</label><input class="form-control" name="mobile" value="{{ student.mobile }}"></div>
         <div class="col-md-3"><label class="form-label">Alternate Number</label><input class="form-control" name="alternate_number" value="{{ student.alternate_number }}"></div>
+        <div class="col-md-4"><label class="form-label">Parent Email</label><input type="email" class="form-control" name="parent_email" value="{{ student.parent_email }}" placeholder="parent@example.com"></div>
         <div class="col-12"><label class="form-label">Address</label><textarea class="form-control" name="address">{{ student.address }}</textarea></div>
     </div>
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">

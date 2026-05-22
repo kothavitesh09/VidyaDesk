@@ -126,6 +126,15 @@ button,
     box-shadow: inset 3px 0 0 #60a5fa;
 }
 
+.sidebar-section {
+    color: #8fb4e6;
+    font-size: 11px;
+    font-weight: 850;
+    letter-spacing: .08em;
+    margin: 18px 14px 6px;
+    text-transform: uppercase;
+}
+
 .main {
     margin-left: var(--sidebar-width);
     min-height: 100vh;
@@ -763,6 +772,124 @@ textarea.form-control {
 
 .receipt-history-panel tbody tr:hover td {
     background: #f8fbff;
+}
+
+.communication-grid {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: minmax(0, 1fr) 320px;
+}
+
+.template-list {
+    display: grid;
+    gap: 12px;
+}
+
+.template-card {
+    align-items: center;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    display: flex;
+    gap: 14px;
+    justify-content: space-between;
+    padding: 14px;
+}
+
+.template-card strong,
+.template-card span {
+    display: block;
+}
+
+.template-card span {
+    color: var(--muted);
+    margin-top: 4px;
+}
+
+.template-actions {
+    align-items: center;
+    display: flex;
+    flex-shrink: 0;
+    gap: 8px;
+}
+
+.placeholder-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.placeholder-chip {
+    background: #eef6ff;
+    border: 1px solid #bfd7ff;
+    border-radius: 999px;
+    color: #174ea6;
+    display: inline-flex;
+    font-size: 12px;
+    font-weight: 800;
+    padding: 7px 10px;
+}
+
+button.placeholder-chip {
+    cursor: pointer;
+}
+
+.template-body-field {
+    min-height: 260px;
+}
+
+.communication-send-panel {
+    margin-bottom: 16px;
+}
+
+.email-send-actions {
+    align-items: center;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 18px;
+}
+
+.email-progress {
+    align-items: center;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 12px;
+    color: #166534;
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+    padding: 12px 14px;
+}
+
+.email-preview-box {
+    background: #f8fafc;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    min-height: 180px;
+    padding: 16px;
+    white-space: pre-wrap;
+}
+
+.empty-state {
+    align-items: center;
+    border: 1px dashed var(--line-strong);
+    border-radius: 14px;
+    color: var(--muted);
+    display: grid;
+    gap: 6px;
+    justify-items: center;
+    padding: 28px 16px;
+    text-align: center;
+}
+
+.empty-state i {
+    color: var(--primary);
+    font-size: 28px;
+}
+
+.empty-state strong {
+    color: var(--text);
 }
 
 .fee-head-grid {
@@ -2325,6 +2452,9 @@ textarea.form-control {
     .receipt-summary-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
+    .communication-grid {
+        grid-template-columns: 1fr;
+    }
     .reports-dashboard {
         margin: -16px;
         padding: 22px 16px;
@@ -2384,6 +2514,18 @@ textarea.form-control {
     }
     .receipt-summary-card {
         min-height: auto;
+    }
+    .template-card,
+    .email-send-actions,
+    .email-progress {
+        align-items: stretch;
+        flex-direction: column;
+    }
+    .template-actions {
+        justify-content: flex-start;
+    }
+    .email-send-actions .btn {
+        width: 100%;
     }
     .reports-dashboard {
         padding: 20px 14px;

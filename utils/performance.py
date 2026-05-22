@@ -78,6 +78,8 @@ def _create_missing_indexes():
     _ensure(mongo.db.users, "users_username", [("username", ASCENDING)])
     _ensure(mongo.db.users, "users_school_username", [("school_id", ASCENDING), ("username", ASCENDING)])
     _ensure(mongo.db.discounts, "discounts_school_student", [("school_id", ASCENDING), ("student_id", ASCENDING)])
+    _ensure(mongo.db.email_templates, "email_templates_school_updated", [("school_id", ASCENDING), ("updated_at", DESCENDING)])
+    _ensure(mongo.db.email_logs, "email_logs_school_sent", [("school_id", ASCENDING), ("sent_at", DESCENDING)])
     _ensure(mongo.db.schools, "schools_school_id", [("school_id", ASCENDING)])
     _ensure(mongo.db.schools, "schools_status", [("approval_status", ASCENDING), ("account_status", ASCENDING)])
     _ensure(mongo.db.admin_users, "admin_users_username", [("username", ASCENDING)])

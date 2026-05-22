@@ -27,6 +27,9 @@ class Config:
         "image/svg+xml",
     ]
     COMPRESS_LEVEL = int(os.getenv("COMPRESS_LEVEL", "6"))
+    MAIL_WORKER_URL = os.getenv("MAIL_WORKER_URL", "").rstrip("/")
+    MAIL_API_KEY = os.getenv("MAIL_API_KEY", "")
+    MAIL_SEND_DELAY_SECONDS = float(os.getenv("MAIL_SEND_DELAY_SECONDS", "0.2"))
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = "Lax"
     SESSION_COOKIE_SECURE = os.getenv("SESSION_COOKIE_SECURE", "1" if os.getenv("VERCEL") else "0") == "1"

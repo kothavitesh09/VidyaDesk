@@ -12,6 +12,7 @@ from utils.helpers import GRADES, FEE_HEADS, active_year, money, oid
 from utils.tenant import scoped_insert, scoped_query, scoped_set, scoped_update_query, write_school_id
 
 student_bp = Blueprint("students", __name__, url_prefix="/students")
+EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
 @student_bp.route("/")
@@ -82,6 +83,9 @@ def index():
 @login_required
 def add():
     if request.method == "POST":
+        if not _valid_parent_email(request.form):
+            flash("Enter a valid parent email address or leave it blank.", "danger")
+            return render_template("students/form.html", student=request.form, grades=GRADES, fee_heads=FEE_HEADS, fee_structures=_fee_structure_options(), active_year=active_year())
         payload = _student_payload(request.form)
         if not request.form.get("status"):
             payload["status"] = "Active"
@@ -119,6 +123,9 @@ def edit(student_id):
         flash("Student not found", "danger")
         return redirect(url_for("students.index"))
     if request.method == "POST":
+        if not _valid_parent_email(request.form):
+            flash("Enter a valid parent email address or leave it blank.", "danger")
+            return render_template("students/form.html", student={**student, **request.form}, grades=GRADES, fee_heads=FEE_HEADS, fee_structures=_fee_structure_options(), active_year=active_year())
         payload = _student_payload(request.form)
         if "total_paid" not in request.form:
             payload["total_paid"] = money(student.get("total_paid"))
@@ -317,6 +324,7 @@ def _student_payload(form):
         "dob": form.get("dob"),
         "academic_year": form.get("academic_year"),
         "grade": form.get("grade"),
+        "section": form.get("section", "").strip(),
         "current_grade": form.get("grade"),
         "previous_grade": form.get("previous_grade", ""),
         "status": form.get("status") or "Active",
@@ -325,6 +333,7 @@ def _student_payload(form):
         "father_name": form.get("father_name", "").strip(),
         "mother_name": form.get("mother_name", "").strip(),
         "mobile": form.get("mobile", "").strip(),
+        "parent_email": form.get("parent_email", "").strip().lower(),
         "alternate_number": form.get("alternate_number", "").strip(),
         "address": form.get("address", "").strip(),
         "total_paid": money(form.get("total_paid")),
@@ -441,6 +450,7 @@ def _student_json(student):
         "dob": student.get("dob", ""),
         "academic_year": student.get("academic_year", ""),
         "grade": student.get("grade", ""),
+        "section": student.get("section", ""),
         "previous_grade": student.get("previous_grade", ""),
         "current_grade": student.get("current_grade") or student.get("grade", ""),
         "student_status": student.get("student_status", ""),
@@ -449,6 +459,7 @@ def _student_json(student):
         "father_name": student.get("father_name", ""),
         "mother_name": student.get("mother_name", ""),
         "mobile": student.get("mobile", ""),
+        "parent_email": student.get("parent_email", ""),
         "alternate_number": student.get("alternate_number", ""),
         "address": student.get("address", ""),
         "promotion_date": str(student.get("promotion_date", "")),
@@ -456,6 +467,11 @@ def _student_json(student):
         "left_reason": student.get("left_reason", ""),
         "tc_issued": bool(student.get("tc_issued")),
     }
+
+
+def _valid_parent_email(form):
+    email = form.get("parent_email", "").strip()
+    return not email or bool(EMAIL_RE.match(email))
 
 
 def _fee_structure_options(academic_year="", grade=""):

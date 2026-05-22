@@ -4,6 +4,8 @@ from flask import current_app, has_request_context, session
 TENANT_COLLECTIONS = (
     "academic_years",
     "discounts",
+    "email_logs",
+    "email_templates",
     "fee_structures",
     "payments",
     "receipts",

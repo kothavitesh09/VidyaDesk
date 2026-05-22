@@ -24,6 +24,7 @@ def create_app():
     from routes.fee_routes import fee_bp
     from routes.receipt_routes import receipt_bp
     from routes.report_routes import report_bp
+    from routes.communication_routes import communication_bp
     from routes.super_admin_routes import super_admin_bp
 
     app.register_blueprint(auth_bp)
@@ -32,6 +33,7 @@ def create_app():
     app.register_blueprint(fee_bp)
     app.register_blueprint(receipt_bp)
     app.register_blueprint(report_bp)
+    app.register_blueprint(communication_bp)
     app.register_blueprint(super_admin_bp)
 
     @app.context_processor

@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <h1 class="h4 mb-1">Send Emails</h1>
+        <div class="text-muted">Send rendered messages to parents using saved templates.</div>
+    </div>
+    <a class="btn btn-outline-primary" href="{{ url_for('communication.templates') }}"><i class="bi bi-envelope-paper"></i> Manage Templates</a>
+</div>
+
+<form class="erp-panel communication-send-panel" method="post" data-email-send-form>
+    <div class="row g-3">
+        <div class="col-md-4">
+            <label class="form-label">Academic Year</label>
+            <select class="form-select" name="academic_year" data-email-year>
+                {% for year in academic_years() %}
+                <option value="{{ year.name }}" {% if active_year == year.name %}selected{% endif %}>{{ year.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Template</label>
+            <select class="form-select" name="template_id" required data-email-template>
+                <option value="">Select template</option>
+                {% for template in templates %}
+                <option value="{{ template._id }}">{{ template.template_name }} - {{ template.subject }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Recipients</label>
+            <select class="form-select" name="recipient_scope" data-recipient-scope>
+                <option value="single">Single Student</option>
+                <option value="class">Class-wise</option>
+                <option value="section">Section-wise</option>
+                <option value="due">Due Students Only</option>
+                <option value="all">All Students</option>
+            </select>
+        </div>
+        <div class="col-md-4" data-scope-grade>
+            <label class="form-label">Grade/Class</label>
+            <select class="form-select" name="grade" data-email-grade>
+                <option value="">Select Class</option>
+                {% for grade in grades %}<option>{{ grade }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="col-md-4" data-scope-section>
+            <label class="form-label">Section</label>
+            <input class="form-control" name="section" placeholder="A, B, C">
+        </div>
+        <div class="col-md-4" data-scope-student>
+            <label class="form-label">Student</label>
+            <select class="form-select" name="student_id" data-email-student>
+                <option value="">Select student</option>
+                {% for student in students %}
+                <option value="{{ student.id }}">{{ student.text }} - {{ student.email }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    <div class="email-send-actions">
+        <button type="button" class="btn btn-outline-secondary" data-email-preview><i class="bi bi-eye"></i> Preview</button>
+        <button class="btn btn-primary" data-email-send-button><i class="bi bi-send"></i> Send Emails</button>
+    </div>
+    <div class="email-progress d-none" data-email-progress>
+        <span class="spinner-border spinner-border-sm"></span>
+        <strong>Sending emails...</strong>
+        <span>Keep this page open until VidyaDesk shows the summary.</span>
+    </div>
+</form>
+
+<div class="erp-panel">
+    <h2 class="erp-title">Available Placeholders</h2>
+    <div class="placeholder-grid">
+        {% for key in placeholders %}
+        <span class="placeholder-chip">{{ "{{" ~ key ~ "}}" }}</span>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="modal fade" id="emailPreviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title fs-5">Email Preview</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h3 class="h6" data-preview-title></h3>
+                <div class="email-preview-box" data-preview-content></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

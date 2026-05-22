@@ -12,8 +12,10 @@
             <table class="table table-bordered mb-0">
                 <tr><th>Admission No</th><td>{{ student.admission_no }}</td></tr>
                 <tr><th>Grade</th><td>{{ student.grade }}</td></tr>
+                <tr><th>Section</th><td>{{ student.section or "-" }}</td></tr>
                 <tr><th>Student Type</th><td>{{ student.student_type }}</td></tr>
                 <tr><th>Mobile</th><td>{{ student.mobile }}</td></tr>
+                <tr><th>Parent Email</th><td>{{ student.parent_email or "-" }}</td></tr>
                 <tr><th>Parent</th><td>{{ student.father_name }} / {{ student.mother_name }}</td></tr>
             </table>
         </div>

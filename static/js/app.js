@@ -113,6 +113,128 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.querySelectorAll("[data-fee-builder]").forEach(initFeeBuilder);
 
+    function renderTemplateText(text, context) {
+        return String(text || "").replace(/{{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*}}/g, (match, key) => (
+            Object.prototype.hasOwnProperty.call(context || {}, key) ? context[key] : match
+        ));
+    }
+
+    function showEmailPreview(subject, body) {
+        const modalEl = document.getElementById("emailPreviewModal");
+        const modal = modalEl && window.bootstrap ? new bootstrap.Modal(modalEl) : null;
+        const title = document.querySelector("[data-preview-title]");
+        const content = document.querySelector("[data-preview-content]");
+        if (title) title.textContent = subject || "Email Preview";
+        if (content) content.textContent = body || "";
+        modal?.show();
+    }
+
+    const templateModalEl = document.getElementById("templateModal");
+    templateModalEl?.addEventListener("show.bs.modal", (event) => {
+        const button = event.relatedTarget;
+        const form = templateModalEl.querySelector("[data-template-form]");
+        const id = form?.querySelector("[data-template-id-field]");
+        const name = form?.querySelector("[data-template-name-field]");
+        const subject = form?.querySelector("[data-template-subject-field]");
+        const body = form?.querySelector("[data-template-body-field]");
+        const title = templateModalEl.querySelector("[data-template-title]");
+        if (!button?.dataset.templateId) {
+            form?.reset();
+            if (id) id.value = "";
+            if (title) title.textContent = "New Email Template";
+            return;
+        }
+        if (id) id.value = button.dataset.templateId || "";
+        if (name) name.value = button.dataset.templateName || "";
+        if (subject) subject.value = button.dataset.templateSubject || "";
+        if (body) body.value = button.dataset.templateBody || "";
+        if (title) title.textContent = "Edit Email Template";
+    });
+
+    document.querySelectorAll("[data-placeholder]").forEach((button) => {
+        button.addEventListener("click", () => {
+            const body = document.querySelector("[data-template-body-field]");
+            if (!body) return;
+            const start = body.selectionStart || body.value.length;
+            const end = body.selectionEnd || body.value.length;
+            body.value = `${body.value.slice(0, start)}${button.dataset.placeholder}${body.value.slice(end)}`;
+            body.focus();
+            body.selectionStart = body.selectionEnd = start + button.dataset.placeholder.length;
+        });
+    });
+
+    document.querySelectorAll("[data-preview-subject]").forEach((button) => {
+        button.addEventListener("click", () => {
+            const sample = JSON.parse(button.dataset.sample || "{}");
+            showEmailPreview(
+                renderTemplateText(button.dataset.previewSubject, sample),
+                renderTemplateText(button.dataset.previewBody, sample),
+            );
+        });
+    });
+
+    const emailSendForm = document.querySelector("[data-email-send-form]");
+    if (emailSendForm) {
+        const scope = emailSendForm.querySelector("[data-recipient-scope]");
+        const year = emailSendForm.querySelector("[data-email-year]");
+        const grade = emailSendForm.querySelector("[data-email-grade]");
+        const student = emailSendForm.querySelector("[data-email-student]");
+        const template = emailSendForm.querySelector("[data-email-template]");
+        const scopeGrade = emailSendForm.querySelector("[data-scope-grade]");
+        const scopeSection = emailSendForm.querySelector("[data-scope-section]");
+        const scopeStudent = emailSendForm.querySelector("[data-scope-student]");
+        const progress = emailSendForm.querySelector("[data-email-progress]");
+        const sendButton = emailSendForm.querySelector("[data-email-send-button]");
+
+        function syncEmailScope() {
+            const value = scope?.value || "single";
+            scopeStudent?.classList.toggle("d-none", value !== "single");
+            scopeGrade?.classList.toggle("d-none", !["class", "section"].includes(value));
+            scopeSection?.classList.toggle("d-none", value !== "section");
+        }
+
+        async function loadEmailStudents() {
+            if (!student) return;
+            const params = new URLSearchParams();
+            if (year?.value) params.set("academic_year", year.value);
+            if (grade?.value) params.set("grade", grade.value);
+            student.innerHTML = "<option value=''>Loading students...</option>";
+            const response = await fetch(`/communication/api/students?${params.toString()}`);
+            const rows = await response.json();
+            student.innerHTML = "<option value=''>Select student</option>";
+            rows.forEach((row) => {
+                const option = document.createElement("option");
+                option.value = row.id;
+                option.textContent = `${row.text} - ${row.email}`;
+                student.appendChild(option);
+            });
+        }
+
+        scope?.addEventListener("change", syncEmailScope);
+        year?.addEventListener("change", loadEmailStudents);
+        grade?.addEventListener("change", loadEmailStudents);
+        emailSendForm.querySelector("[data-email-preview]")?.addEventListener("click", async () => {
+            const body = new FormData(emailSendForm);
+            const response = await fetch("/communication/preview", { method: "POST", body });
+            const data = await response.json();
+            if (!response.ok) {
+                alert(data.error || "Unable to generate preview.");
+                return;
+            }
+            showEmailPreview(data.subject, data.body);
+        });
+        emailSendForm.addEventListener("submit", (event) => {
+            if (!template?.value) return;
+            if (!confirm("Send emails to the selected recipients?")) {
+                event.preventDefault();
+                return;
+            }
+            progress?.classList.remove("d-none");
+            if (sendButton) sendButton.disabled = true;
+        });
+        syncEmailScope();
+    }
+
     const studentFeeForm = document.querySelector("[data-student-fee-form]");
     const studentFeeSelectors = document.querySelectorAll("[data-fee-lookup]");
     const feeStatus = document.querySelector("[data-fee-status]");
@@ -456,8 +578,10 @@ document.addEventListener("DOMContentLoaded", () => {
             profileField("Admission No", student.admission_no),
             profileField("Roll No", student.roll_no),
             profileField("Grade", student.grade),
+            profileField("Section", student.section),
             profileField("Student Type", student.student_type),
             profileField("Mobile", student.mobile),
+            profileField("Parent Email", student.parent_email),
             profileField("Alternate Number", student.alternate_number),
             profileField("Father Name", student.father_name),
             profileField("Mother Name", student.mother_name),
